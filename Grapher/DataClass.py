@@ -7,13 +7,15 @@ class ProcceserDataClass(object):
         self.isFolder = False
         self.outputDir = ""
     def GetOutputPath(self):
-        self.outputDir = raw_input("What path should be outputted to?")
+        self.outputDir = raw_input("What path should be outputted to?\n\r>>> ")
+        if self.outputDir is "":
+            self.outputDir = "C:\Users\Lucas\Pictures\GraphOutput"
         bob = os.path.isabs(self.inputDir)
         if not bob:
             print "that was not an excepted path name.  Try again"
             self.GetOutputPath()
     def GetInputPath(self):
-        self.inputDir = raw_input("Where should files be read from?  This can be a file or a folder of files")
+        self.inputDir = raw_input("Where should files be read from?  This can be a file or a folder of files\n\r>>> ")
         if os.path.isabs(self.inputDir):
             if os.path.isdir(self.inputDir):
                 self.isFolder = True
@@ -82,20 +84,3 @@ class DataClass(object):
         for item in SectionList:
             for SubItem in range(len(item)):
                 item[SubItem] = float(item[SubItem])
-
-    #def formatToFloat(self,item):
-    #    """deletes all strings from LIST: string
-    #        Parameters:
-    #            item: list of values. 
-    #        Returns:
-    #            list of strings derived from 'item' with all strings removed."""
-    #    GOTOTHISDARNIT = len(list(item[:]))
-    #    for subItem in range(GOTOTHISDARNIT):
-    #        try:
-    #            item[subItem] = float(item[subItem])
-    #        except IndexError:
-    #            break
-    #        except ValueError:
-    #            print item[subItem]
-    #            del item[subItem]
-    #    return item[:]

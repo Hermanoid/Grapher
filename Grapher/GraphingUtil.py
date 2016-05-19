@@ -1,12 +1,20 @@
-import DataClass;
-import matplotlib.pyplot as plt;
+import DataClass
+import matplotlib.pyplot as plt
 import csv
 import os
 
 class GraphingUtil:
     """A Utility that Graphs stuff."""
     def Graphit(self,GraphDatas,ProcessData):
-        plt.figure()
+        for file in GraphDatas:
+            fig,ax = plt.subplots(nrows=3,ncols=1)
+            fig.set_size_inches(20.5,8.5)
+            ax[0].plot(file.Millis,file.Accel["X"],'r',file.Millis,file.Accel["Y"],'y',file.Millis,file.Accel["Z"],'g')
+            ax[1].plot(file.Millis,file.AccelAvg,'b')
+            ax[2].plot(file.Millis,file.Gyro["X"],'r',file.Millis,file.Gyro["Y"],'y',file.Millis,file.Gyro["Z"],'g')
+            fig.savefig(os.path.join(ProcessData.outputDir,os.path.splitext(file.FileName)[0]+".png"), dpi = 80)
+            print file.FileName,"Saved!"
+
 
 class GraphDataGrabber:
     def Grabbit(self,ProcessData):
@@ -21,7 +29,7 @@ class GraphDataGrabber:
             GraphData.FileName = os.path.basename(file)
             for row in reader:
                 try:
-                    if len(row)!=16:
+                    if len(row) != 16:
                         raise ValueError("bad length.  Catch this and cut this row out.")
                     GraphData.Timestamps.append(row[0])
                     GraphData.Accel["X"].append(row[1])
