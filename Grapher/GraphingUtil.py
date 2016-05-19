@@ -14,13 +14,16 @@ class GraphDataGrabber:
         for file in ProcessData.inputDirs:
             GraphData = DataClass.DataClass()
             print file
-            reader = csv.reader(open(file))
+            if ProcessData.isFolder:
+                reader = csv.reader(open(os.path.join(ProcessData.inputDir,file)))
+            else:
+                reader = csv.reader(open(os.path.join(os.path.dirname(ProcessData.inputDir),file)))
             GraphData.FileName = os.path.basename(file)
             for row in reader:
                 try:
                     if len(row)!=16:
                         raise ValueError("bad length.  Catch this and cut this row out.")
-                    GraphData.TimeStamps.append(row[0])
+                    GraphData.Timestamps.append(row[0])
                     GraphData.Accel["X"].append(row[1])
                     GraphData.Accel["Y"].append(row[2])
                     GraphData.Accel["Z"].append(row[3])
@@ -40,7 +43,8 @@ class GraphDataGrabber:
                     Bob = "BOGUSNESS"
                 except ValueError:
                     Bob = "still BOGUS!!!"
-            GraphData.ProcessAccAVG()
+            GraphData.formatAllToFloat()
+            GraphData.CreateAccAvg()
             GraphDatas.append(GraphData)
         return GraphDatas
 

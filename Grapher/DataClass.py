@@ -1,15 +1,41 @@
-
-class ProceserDataClass(object):
-	"""A Class storing Processing Data related to the Grapher Project"""
-	def __init__(self):
-		self.dsgt = []
+import os
+class ProcceserDataClass(object):
+    """A Class storing Processing Data related to the Grapher Project"""
+    def __init__(self):
+        self.inputDir = ""
+        self.inputDirs = []
+        self.isFolder = False
+        self.outputDir = ""
+    def GetOutputPath(self):
+        self.outputDir = raw_input("What path should be outputted to?")
+        bob = os.path.isabs(self.inputDir)
+        if not bob:
+            print "that was not an excepted path name.  Try again"
+            self.GetOutputPath()
+    def GetInputPath(self):
+        self.inputDir = raw_input("Where should files be read from?  This can be a file or a folder of files")
+        if os.path.isabs(self.inputDir):
+            if os.path.isdir(self.inputDir):
+                self.isFolder = True
+                self.inputDirs = os.listdir(self.inputDir)
+            elif os.path.isfile(self.inputDir):
+                self.isFolder = False
+                self.inputDirs = [self.inputDir]
+            else:
+                print "That path does not exist.  Try again"
+                self.GetInputPath()
+        else:
+            print "that was not an excepted path name.  Try again."
+            self.GetInputPath()
 class DataClass(object):
     def __init__(self):
-        self.Timestamps = [];  self.Accel = {"X":[],"Y":[],"Z":[]}	
+        self.Timestamps = []
+        self.Accel = {"X":[],"Y":[],"Z":[]}	
         self.Gyro = {"X":[],"Y":[],"Z":[]}
         self.Millis = []
         self.GForce = []
         self.GPSDat = {"lng":[],"lat":[],"Speed":[],"Altitude":[],"Accuracy":[],"Bearing":[]}
+        self.FileName = ""
 
     def Process(self):
         self.delAllStrs()
@@ -30,37 +56,46 @@ class DataClass(object):
         Returns:
              None
          """
-
-        if len(self.Accel["X"]) is not len(self.Accel["Y"]) or len(self.Accel["Z"]) is not len(self.Accel["X"]):
-            raise ValueError("Accel axis are not the same length")                                           
+                                      
         if len(self.Accel["X"]) is 0:
             raise ValueError("Accel Category is empty")
+        self.AccelAvg = []
 
-
-    def delAllStrs(self):
+        for item in range(len(self.Accel["X"])):
+            for axis in ["X","Y","Z"]:
+                if type(self.Accel[axis][item]) != type(123.345):
+                    raise ValueError("non-number included in Accel bank.  Use formatAllToFloat() to remove strings.")
+            self.AccelAvg.append((self.Accel["X"][item] + self.Accel["Y"][item] + self.Accel["Z"][item]) / 3)
+    def formatAllToFloat(self):
         """deletes strings from every sub catagory in the entire bank of data held in the DataClass instance
         
                 self (an instance of DataClass)
             Returns:
                 None
            """
-        SectionList = [self.Timestamps, self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce, self.GPSDat["lng"], self.GPSDat["lat"], self.GPSDat["Speed"], 
-                            self.GPSDat["Altitude"], self.GPSDat["Accuracy"], self.GPSDat["Bearing"]]
+        SectionList = [self.Accel["X"], self.Accel["Y"], self.Accel["Z"], self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce,
+                       self.GPSDat["lng"], self.GPSDat["lat"], self.GPSDat["Speed"], self.GPSDat["Altitude"], self.GPSDat["Accuracy"], self.GPSDat["Bearing"]]
         for item in SectionList:
-            print item
-            self.delStrs(item) 
+            del item[0]
+        del self.Timestamps
 
-    def delStrs(self,item):
-        """deletes all strings from LIST: string
-            Parameters:
-                item: list of values. 
-            Returns:
-                list of strings derived from 'item' with all strings removed."""
-        for subItem in range(len(item)):
-            try:
-                if type(item[subItem]) == type("random string of glory"):
-                    print item[subItem]
-                    item.remove(item[subItem])
-            except IndexError:
-                break
-        return item[:]
+        for item in SectionList:
+            for SubItem in range(len(item)):
+                item[SubItem] = float(item[SubItem])
+
+    #def formatToFloat(self,item):
+    #    """deletes all strings from LIST: string
+    #        Parameters:
+    #            item: list of values. 
+    #        Returns:
+    #            list of strings derived from 'item' with all strings removed."""
+    #    GOTOTHISDARNIT = len(list(item[:]))
+    #    for subItem in range(GOTOTHISDARNIT):
+    #        try:
+    #            item[subItem] = float(item[subItem])
+    #        except IndexError:
+    #            break
+    #        except ValueError:
+    #            print item[subItem]
+    #            del item[subItem]
+    #    return item[:]

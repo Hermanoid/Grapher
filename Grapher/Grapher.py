@@ -5,11 +5,10 @@ import GraphingUtil;
 print "getting Paths..."
 print ""
 
-ProcessData = DataClass.ProcesserDataClass()
+ProcessData = DataClass.ProcceserDataClass()
 
 ProcessData.GetInputPath()
 ProcessData.GetOutputPath()
-ProcessData.ProcessPaths()
 
 
 print "Grabbing Data..."
