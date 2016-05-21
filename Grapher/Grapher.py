@@ -17,5 +17,8 @@ print ""
 Grabber = GraphingUtil.GraphDataGrabber()
 GraphDatas = Grabber.Grabbit(ProcessData)
 
+print "Graphing Data..."
+print ""
+
 Grapher = GraphingUtil.GraphingUtil()
 Grapher.Graphit(GraphDatas,ProcessData)

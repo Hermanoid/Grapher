@@ -6,17 +6,49 @@ import os
 class GraphingUtil:
     """A Utility that Graphs stuff."""
     def Graphit(self,GraphDatas,ProcessData):
+        ProcessData.outputDir = os.path.join(ProcessData.outputDir,self.getEmptyFileName(ProcessData.outputDir))
+        os.mkdir(ProcessData.outputDir)
         for file in GraphDatas:
+            print "{0}\r".format(self.FancyPercent(0,6)),
             fig,ax = plt.subplots(nrows=3,ncols=1)
             fig.set_size_inches(20.5,8.5)
-            ax[0].plot(file.Millis,file.Accel["X"],'r',file.Millis,file.Accel["Y"],'y',file.Millis,file.Accel["Z"],'g')
-            ax[1].plot(file.Millis,file.AccelAvg,'b')
-            ax[2].plot(file.Millis,file.Gyro["X"],'r',file.Millis,file.Gyro["Y"],'y',file.Millis,file.Gyro["Z"],'g')
+            print "{0}\r".format(self.FancyPercent(1,6)),
+            ax0 = ax[0].plot(file.Millis,file.Accel["X"],'r',file.Millis,file.Accel["Y"],'y',file.Millis,file.Accel["Z"],'g')
+            ax[0].set_title("Accelerometer")
+            ax[0].legend([ax0[0],ax0[1],ax0[2]],["X-axis","Y-axis","Z-axis"])
+            ax[0].grid(True)
+            print "{0}\r".format(self.FancyPercent(2,6)),
+            ax1 =  ax[1].plot(file.Millis,file.AccelAvg,'b')
+            ax[1].set_title("Accelerometer Average")
+            ax[1].grid(True)
+            ax[1].legend([ax1[0]],["All axis"])
+            print "{0}\r".format(self.FancyPercent(3,6)),
+            ax2 = ax[2].plot(file.Millis,file.Gyro["X"],'r',file.Millis,file.Gyro["Y"],'y',file.Millis,file.Gyro["Z"],'g')
+            ax[2].set_title("Gyrometer")
+            ax[2].grid(True)
+            ax[2].legend([ax2[0],ax2[1],ax2[2]],["X-axis","Y-axis","Z-axis"])
+            print "{0}\r".format(self.FancyPercent(4,6)),
             fig.savefig(os.path.join(ProcessData.outputDir,os.path.splitext(file.FileName)[0]+".png"), dpi = 80)
-            print file.FileName,"Saved!"
-
+            print "{0}\r".format(self.FancyPercent(6,6)),
+            print "{0}\r".format(""),
+            print "{0}\r".format(file.FileName+" Saved!")
+    def getEmptyFileName(self,path):
+        listy = os.listdir(path)
+        numTest = 1
+        ItWorks = False
+        while not ItWorks:
+            if str(numTest) in listy:
+                numTest=numTest+1
+            else:
+                ItWorks = True
+        return str(numTest)
+    def FancyPercent(self,completed,total):
+        percent = float(completed)/float(total)*100
+        return str(round(percent))+"%"
+            
 
 class GraphDataGrabber:
+    """A utility that gets data from paths"""
     def Grabbit(self,ProcessData):
         GraphDatas = []
         for file in ProcessData.inputDirs:
@@ -53,6 +85,7 @@ class GraphDataGrabber:
                     Bob = "still BOGUS!!!"
             GraphData.formatAllToFloat()
             GraphData.CreateAccAvg()
+            GraphData.Millis =  GraphData.startAt0(GraphData.Millis)
             GraphDatas.append(GraphData)
         return GraphDatas
 

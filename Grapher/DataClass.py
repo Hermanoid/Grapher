@@ -7,6 +7,12 @@ class ProcceserDataClass(object):
         self.isFolder = False
         self.outputDir = ""
     def GetOutputPath(self):
+        """Gets an output path from the user with less-than-foolproof path checking.
+            Parameters: 
+                None
+            Returns:
+                None
+            """
         self.outputDir = raw_input("What path should be outputted to?\n\r>>> ")
         if self.outputDir is "":
             self.outputDir = "C:\Users\Lucas\Pictures\GraphOutput"
@@ -15,6 +21,11 @@ class ProcceserDataClass(object):
             print "that was not an excepted path name.  Try again"
             self.GetOutputPath()
     def GetInputPath(self):
+        """Grabs an input path from the user with relatively foolproof path checking, and processes the inputed path
+            Parameters:
+                None
+            Returns:
+                None"""
         self.inputDir = raw_input("Where should files be read from?  This can be a file or a folder of files\n\r>>> ")
         if os.path.isabs(self.inputDir):
             if os.path.isdir(self.inputDir):
@@ -30,6 +41,7 @@ class ProcceserDataClass(object):
             print "that was not an excepted path name.  Try again."
             self.GetInputPath()
 class DataClass(object):
+    """A storage utility providing storage and certain modification functions to movement data such as Gyroscope, Accelerometer, Milliseconds, Lat/long, etc."""
     def __init__(self):
         self.Timestamps = []
         self.Accel = {"X":[],"Y":[],"Z":[]}	
@@ -39,8 +51,18 @@ class DataClass(object):
         self.GPSDat = {"lng":[],"lat":[],"Speed":[],"Altitude":[],"Accuracy":[],"Bearing":[]}
         self.FileName = ""
 
-    def Process(self):
-        self.delAllStrs()
+    def startAt0(self,List):
+        """starts the first value of 'list' at zero, and counts all other values up from there.
+        Parameters:
+            List: a list with multiple ints or floats
+        Returns:
+            A list derived from 'List' that starts at 0
+        """
+        cutOff = List[0]
+        
+        for item in range(len(List)):
+            List[item] = List[item]-cutOff
+        return List
 
     def toList(self):
         """
