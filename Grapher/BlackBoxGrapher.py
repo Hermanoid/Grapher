@@ -1,6 +1,6 @@
 import os
-import DataClass;
-import GraphingUtil;
+import DataClass
+import GraphingUtil
 
 print "getting Paths..."
 print ""

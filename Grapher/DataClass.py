@@ -1,3 +1,4 @@
+"""A Storage module with Classes providing storage for Graph Data and basic data modification utilities."""
 import os
 class ProcceserDataClass(object):
     """A Class storing Processing Data related to the Grapher Project"""
@@ -43,14 +44,88 @@ class ProcceserDataClass(object):
 class DataClass(object):
     """A storage utility providing storage and certain modification functions to movement data such as Gyroscope, Accelerometer, Milliseconds, Lat/long, etc."""
     def __init__(self):
+        """Creates a DataClass instance with the following datasets initialized:
+            TimeStamps:
+                list
+            Accel:
+                Dictionary:
+                    "X":list
+                    "Y":list
+                    "Z":list
+            Gyro:
+                Dictionary:
+                    "X":list, "Y":list, "Z":list  
+            Millis:
+                list
+            GForce:
+                list
+            GPSDat:
+                Dictionary:
+                    "lng":list
+                    "lat":list
+                    "Speed":list
+                    "Altitude":list
+                    "Accuracy":list
+                    "Bearing":list
+            FileName:
+                String
+"""
         self.Timestamps = []
         self.Accel = {"X":[],"Y":[],"Z":[]}	
         self.Gyro = {"X":[],"Y":[],"Z":[]}
+        self.Mag = {"X":[],"Y":[],"Z":[]}
+        self.Rot = {"X":[],"Y":[],"Z":[]}
         self.Millis = []
         self.GForce = []
         self.GPSDat = {"lng":[],"lat":[],"Speed":[],"Altitude":[],"Accuracy":[],"Bearing":[]}
         self.FileName = ""
-
+        self.Dats = []
+    def avgAllTo(self,RPS):
+        raise NotImplementedError()
+        SectionList = [self.Accel["X"], self.Accel["Y"], self.Accel["Z"], self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce,
+                       self.GPSDat["lng"], self.GPSDat["lat"], self.GPSDat["Speed"], self.GPSDat["Altitude"], self.GPSDat["Accuracy"], self.GPSDat["Bearing"]]
+        
+        for section in SectionList:
+            self.avgTo(section,RPS)
+    def avgTo(self,item,RPS):
+        raise NotImplementedError()
+        sectLen = 1.0 / RPS
+        sects = {}
+        sect = 1
+        print item
+        for val in item:
+            valExcepted = False
+            while not valExcepted:
+                if float(val) < float(sect * sectLen):
+                    try:
+                        sects[str(sect)].append(val)
+                    except KeyError:
+                        sects[str(sect)] = []
+                        sects[str(sect)].append(val)
+                    valExcepted = True
+                else:
+                    sect = sect + 1
+        return sects    
+    def SyncTo(self,itemMillis,targetedMillis,item):
+        if not len(itemMillis) == len(item):
+            raise ValueError("Item and ItemMillis must have same length")
+        newSet = {}
+        on = 0
+        for time in targetedMillis:
+            newSet[str(time)] = []
+            GoOn = True
+            while GoOn:
+                if round(itemMillis[on],ndigits=2)==round(time,ndigits=2):
+                    newSet[str(time)].append(item[on])
+                    on = on+1
+                else:
+                    GoOn=False
+        for time in newSet:
+            if newSet[time]:
+                There = False
+                while not There:
+                    
+                    
     def startAt0(self,List):
         """starts the first value of 'list' at zero, and counts all other values up from there.
         Parameters:
@@ -61,18 +136,29 @@ class DataClass(object):
         cutOff = List[0]
         
         for item in range(len(List)):
-            List[item] = List[item]-cutOff
+            List[item] = List[item] - cutOff
         return List
-
-    def toList(self):
-        """
-            Returns a list of all the categories contained my DataClass.  Note that dictionaries such as GPSDat are returned in dictionary form.
-        """
-        return [self.Timestamps,self.Accel,self.Gyro,self.Millis,self.GForce,self.GForce,self.GPSDat]
-
+    def getGenericDataFor(self,datName):
+        if datName in ['acc.csv','acc','Acc','ACC','Accel','ACCEL','Accelerometer']:
+            return GenericDat(self.Accel["X"],self.Accel["Y"],self.Accel["Z"])
+        if datName in ['gyr.csv','gyr','Gyr','Gyro','GYR','GYRO','Gyrometer']:
+            return GenericDat(self.Gyro["X"],self.Gyro["Y"],self.Gyro["Z"])
+        if datName in ['mag.csv','Mag','mag','MAG','Magnometer']:
+            return GenericDat(self.Mag["X"],self.Mag["Y"],self.Mag["Z"])
+        if datName in ['rot.csv','rot','Rot','ROT','Rotation']:
+            return GenericDat(self.Rot["X"],self.Rot["Y"],self.Rot["Z"])
+    def MillisToSec(self):
+        """A simple, convenient Utlity that converts the Milliseconds section of a DataClass instance to seconds
+            Parameters:
+                None
+            Returns:
+                the DataClass.Millis section
+            Note:
+                This function does not rename the section, so be careful and remember that the data under DataClass.Millis is actually in seconds after using this."""
+        self.Millis = [item / 1000 for item in self.Millis]
+        return self.Millis
     def CreateAccAvg(self):
-        """
-            Creates AVG category under the DataClass instance.  Note that this category does not return with toList() or any other to-things(), and does not get strings deleted with delAllStrs(), although that is not nessessary as no strings are created under it in the first place
+        """Creates AVG category under the DataClass instance.  Note that this category does not return with toList() or any other to-things(), and does not get strings deleted with delAllStrs(), although that is not nessessary as no strings are created under it in the first place
          Parameters:  
             self (DataClass instance)
         Requires:
@@ -97,12 +183,43 @@ class DataClass(object):
             Returns:
                 None
            """
-        SectionList = [self.Accel["X"], self.Accel["Y"], self.Accel["Z"], self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce,
-                       self.GPSDat["lng"], self.GPSDat["lat"], self.GPSDat["Speed"], self.GPSDat["Altitude"], self.GPSDat["Accuracy"], self.GPSDat["Bearing"]]
-        for item in SectionList:
-            del item[0]
-        del self.Timestamps
+        SectionList = [self.Accel["X"], self.Accel["Y"], self.Accel["Z"], self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce,self.Rot["X"],self.Rot["Y"],self.Rot["Z"],
+                       self.GPSDat["lng"], self.GPSDat["lat"], self.GPSDat["Speed"], self.GPSDat["Altitude"], self.GPSDat["Accuracy"], self.GPSDat["Bearing"],self.Mag["X"],self.Mag["Y"],self.Mag["Z"]]
 
         for item in SectionList:
-            for SubItem in range(len(item)):
-                item[SubItem] = float(item[SubItem])
+            if not len(item) == 0:
+                for SubItem in range(len(item)):
+                    try:
+                        if SubItem > len(item):
+                            break
+                        else:
+                            item[SubItem] = float(item[SubItem])
+                    except ValueError:
+                        try:
+                            del item[SubItem]
+                        except IndexError:
+                            "Slightly dangerous catch...."
+                    except IndexError:
+                        "yo"
+
+class GenericDat(object):
+    def __init__(self):
+        self.Dat = {"X":[],"Y":[],"Z":[]}
+    def __init__(self,X,Y,Z):
+        self.Dat = {"X":X,"Y":Y,"Z":Z}
+    def set_X(self,list):
+        self.Dat["X"] = list
+    def set_Y(self,list):
+        self.Dat["Y"] = list
+    def set_Z(self,list):
+        self.Dat["Z"] = list
+    def get_X(self):
+        return self.Dat["X"]
+    def get_Y(self):
+        return self.Dat["Y"]
+    def get_Z(self):
+        return self.Dat["Z"]
+    def set(self,Key,list):
+        self.Dat[Key] = list
+    def get(self,Key):
+        return self.Dat[Key]
