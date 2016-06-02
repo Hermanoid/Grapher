@@ -33,7 +33,7 @@ class GraphingUtil:
             ax[0].legend([ax0[0],ax0[1],ax0[2]],["X-axis","Y-axis","Z-axis"])
             ax[0].grid(True)
             print "{0}\r".format(self.FancyPercent(2,6)),
-            ax1 =  ax[1].plot(file.Millis,file.AccelAvg,'b',file.Millis,file.GPSDat["Speed"],'m-')
+            ax1 = ax[1].plot(file.Millis,file.AccelAvg,'b',file.Millis,file.GPSDat["Speed"],'m-')
             ax[1].set_title("Accelerometer Average/Speed")
             ax[1].grid(True)
             ax[1].legend([ax1[0],ax1[1]],["Accel AVG","Speed"])
@@ -43,10 +43,10 @@ class GraphingUtil:
             ax[2].grid(True)
             ax[2].legend([ax2[0],ax2[1],ax2[2]],["X-axis","Y-axis","Z-axis"])
             print "{0}\r".format(self.FancyPercent(4,6)),
-            fig.savefig(os.path.join(ProcessData.outputDir,os.path.splitext(file.FileName)[0]+".png"), dpi = 80)
+            fig.savefig(os.path.join(ProcessData.outputDir,os.path.splitext(file.FileName)[0] + ".png"), dpi = 80)
             print "{0}\r".format(self.FancyPercent(6,6)),
             print "{0}\r".format(""),
-            print "{0}\r".format(file.FileName+" Saved!")
+            print "{0}\r".format(file.FileName + " Saved!")
     def getEmptyFileName(self,path):
         """Gets an empty, unused filenumber in the given path.  If folders 1-5 already exist in the directory, 6 will be returned
             Parameters:
@@ -62,7 +62,7 @@ class GraphingUtil:
         ItWorks = False
         while not ItWorks:
             if str(numTest) in listy:
-                numTest=numTest+1
+                numTest = numTest + 1
             else:
                 ItWorks = True
         return str(numTest)
@@ -75,8 +75,8 @@ class GraphingUtil:
                     The total number of steps.  If completed is equal to this,  percentage returned will be 100.00%.
             Returns:
                 Percentage (string):  a percentage (derived from completed/total) that is accurate to the nearest hundredth and ends with a %."""
-        percent = float(completed)/float(total)*100
-        return str(round(percent))+"%"
+        percent = float(completed) / float(total) * 100
+        return str(round(percent)) + "%"
     def getSpikes(self,data,minval=10,minIncrease=1.5):
         """A Utility that grabs the value of and locations of spikes in a list of data.
             Parameters:
@@ -93,34 +93,48 @@ class GraphingUtil:
                     SpikeLocs:
                         The indexes in 'data' where a spike was found.
                 """
-        lastval=0
-        SpikeVals=[]
-        SpikeLocs=[]
+        lastval = 0
+        SpikeVals = []
+        SpikeLocs = []
         for item in range(len(data)):
             if item == len(data):
                 break
-            if math.fabs(data[item])>=minval:
-                if (math.fabs(data[item])-math.fabs(lastval))>=minIncrease:
-                    if data[item+1]<data[item]:
+            if math.fabs(data[item]) >= minval:
+                if (math.fabs(data[item]) - math.fabs(lastval)) >= minIncrease:
+                    if data[item + 1] < data[item]:
                         SpikeVals.append(data[item])
                         SpikeLocs.append(item)
         lastval = data[item]
         return (SpikeVals,SpikeLocs)
     def SKGraphit(self,GraphDatas,ProcessData):
-        print GraphDatas[0].Accel
+        ProcessData.outputDir = os.path.join(ProcessData.outputDir,self.getEmptyFileName(ProcessData.outputDir))
+        os.mkdir(ProcessData.outputDir)
         for GraphData in GraphDatas:
             fig,ax = plt.subplots(nrows = len(GraphData.Dats),ncols=1)
-            fig.set_size_inches(20.5,8.5)
+            if len(GraphData.Dats) is 1:
+                ax = [ax]
+            
+            TimeLength = GraphData.getGenericDataFor(GraphData.Dats[0]).get_Millis()[-1]
+            if TimeLength<=60:
+                fig.set_size_inches(20.5,8.5)
+            else:
+                fig.set_size_inches(20.5*(TimeLength/60),8.5)
             fig.suptitle(GraphData.FileName)
+            Millis = GraphData.getGenericDataFor(GraphData.getShortestDat()).Millis
             for datIn in range(len(GraphData.Dats)):
-                print "{0}\r".format(self.FancyPercent(datIn,len(GraphData.Dats)+2)),
+                print "{0}\r".format(self.FancyPercent(datIn,len(GraphData.Dats) + 2)),
                 Dat = GraphData.getGenericDataFor(GraphData.Dats[datIn])
-                lines = ax[datIn].plot(Dat.get_X(),GraphData.Millis,'r-',Dat.get_Y(),GraphData.Millis,'m-',Dat.get_Z(),GraphData.Millis,'b-')
+                lines = ax[datIn].plot(Dat.get_Millis(),Dat.get_X(),'r-',Dat.get_Millis(),Dat.get_Y(),'g-',Dat.get_Millis(),Dat.get_Z(),'y-')
                 ax[datIn].set_title(self.getFullName(GraphData.Dats[datIn]))
                 ax[datIn].grid(True)
+                if round(Dat.get_Millis()[-1])<=60:
+                    ax[datIn].set_xticks(range(int(round(float(Dat.get_Millis()[-1])))))
+                elif round(Dat.get_Millis()[-1])<=120:
+                    ax[datIn].set_xticks(range(0,int(round(float(Dat.get_Millis()[-1]))),2))
                 top = GraphData.Dats[datIn].split('.')[0]
-                ax[datIn].legend([lines[0],lines[1],lines[2]],[top+"-X",top+"-Y",top+"-Z"])
-            fig.savefig(os.path.join(ProcessData.outputDir,os.path.splitext(GraphData.FileName)[0]+".png"), dpi = 80)
+                ax[datIn].legend([lines[0],lines[1],lines[2]],[top + "-X",top + "-Y",top + "-Z"])
+            fig.savefig(os.path.join(ProcessData.outputDir,os.path.splitext(GraphData.FileName)[0] + ".png"), dpi = 160)
+            print "{0}\r".format(GraphData.FileName + " Saved!")
     def getFullName(self,abbr):
         if abbr in ['acc.csv','acc','Acc','ACC','Accel','ACCEL','Accelerometer']:
             return "Accelerometer"
@@ -187,7 +201,7 @@ class GraphDataGrabber:
                     Bob = "still BOGUS!!!"
             GraphData.formatAllToFloat()
             GraphData.CreateAccAvg()
-            GraphData.Millis =  GraphData.startAt0(GraphData.Millis)
+            GraphData.Millis = GraphData.startAt0(GraphData.Millis)
             GraphDatas.append(GraphData)
         return GraphDatas
     def SKGrabbit(self,ProcessData):
@@ -203,32 +217,33 @@ class GraphDataGrabber:
                 runDats[split[0]].append(split[1])
         GraphDatas = []
         for run in runDats:
+            print run
             GraphData = DataClass.DataClass()
             GraphData.FileName = run
-            MillisRead = False
             for dat in runDats[run]:
-                reader = csv.reader(open(os.path.join(ProcessData.inputDir,run+'_'+dat)))
+                reader = csv.reader(open(os.path.join(ProcessData.inputDir,run + '_' + dat)))
                 GraphData.Dats.append(dat)
                 for row in reader:
-                    if not MillisRead:
-                        GraphData.Millis.append(row[0])
                     if dat == 'acc.csv':
+                        GraphData.DDMillis.Accel.append(row[0])
                         GraphData.Accel["X"].append(row[1])
                         GraphData.Accel["Y"].append(row[2])
                         GraphData.Accel["Z"].append(row[3])
                     if dat == 'gyr.csv':
+                        GraphData.DDMillis.Gyro.append(row[0])
                         GraphData.Gyro["X"].append(row[1])
                         GraphData.Gyro["Y"].append(row[2])
                         GraphData.Gyro["Z"].append(row[3])
                     if dat == 'mag.csv':
+                        GraphData.DDMillis.Mag.append(row[0])
                         GraphData.Mag["X"].append(row[1])
                         GraphData.Mag["Y"].append(row[2])
                         GraphData.Mag["Z"].append(row[3])
                     if dat == 'rot.csv':
+                        GraphData.DDMillis.Rot.append(row[0])
                         GraphData.Rot["X"].append(row[1])
                         GraphData.Rot["Y"].append(row[2])
                         GraphData.Rot["Z"].append(row[3])
-                MillisRead=True;
             GraphData.formatAllToFloat()
             GraphDatas.append(GraphData)
         return GraphDatas

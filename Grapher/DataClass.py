@@ -80,6 +80,7 @@ class DataClass(object):
         self.GPSDat = {"lng":[],"lat":[],"Speed":[],"Altitude":[],"Accuracy":[],"Bearing":[]}
         self.FileName = ""
         self.Dats = []
+        self.DDMillis = DifDatMillis()
     def avgAllTo(self,RPS):
         raise NotImplementedError()
         SectionList = [self.Accel["X"], self.Accel["Y"], self.Accel["Z"], self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce,
@@ -106,26 +107,6 @@ class DataClass(object):
                 else:
                     sect = sect + 1
         return sects    
-    def SyncTo(self,itemMillis,targetedMillis,item):
-        if not len(itemMillis) == len(item):
-            raise ValueError("Item and ItemMillis must have same length")
-        newSet = {}
-        on = 0
-        for time in targetedMillis:
-            newSet[str(time)] = []
-            GoOn = True
-            while GoOn:
-                if round(itemMillis[on],ndigits=2)==round(time,ndigits=2):
-                    newSet[str(time)].append(item[on])
-                    on = on+1
-                else:
-                    GoOn=False
-        for time in newSet:
-            if newSet[time]:
-                There = False
-                while not There:
-                    
-                    
     def startAt0(self,List):
         """starts the first value of 'list' at zero, and counts all other values up from there.
         Parameters:
@@ -140,13 +121,13 @@ class DataClass(object):
         return List
     def getGenericDataFor(self,datName):
         if datName in ['acc.csv','acc','Acc','ACC','Accel','ACCEL','Accelerometer']:
-            return GenericDat(self.Accel["X"],self.Accel["Y"],self.Accel["Z"])
+            return GenericDat(self.Accel["X"],self.Accel["Y"],self.Accel["Z"],self.DDMillis.Accel)
         if datName in ['gyr.csv','gyr','Gyr','Gyro','GYR','GYRO','Gyrometer']:
-            return GenericDat(self.Gyro["X"],self.Gyro["Y"],self.Gyro["Z"])
+            return GenericDat(self.Gyro["X"],self.Gyro["Y"],self.Gyro["Z"],self.DDMillis.Gyro)
         if datName in ['mag.csv','Mag','mag','MAG','Magnometer']:
-            return GenericDat(self.Mag["X"],self.Mag["Y"],self.Mag["Z"])
+            return GenericDat(self.Mag["X"],self.Mag["Y"],self.Mag["Z"],self.DDMillis.Mag)
         if datName in ['rot.csv','rot','Rot','ROT','Rotation']:
-            return GenericDat(self.Rot["X"],self.Rot["Y"],self.Rot["Z"])
+            return GenericDat(self.Rot["X"],self.Rot["Y"],self.Rot["Z"],self.DDMillis.Rot)
     def MillisToSec(self):
         """A simple, convenient Utlity that converts the Milliseconds section of a DataClass instance to seconds
             Parameters:
@@ -183,12 +164,13 @@ class DataClass(object):
             Returns:
                 None
            """
-        SectionList = [self.Accel["X"], self.Accel["Y"], self.Accel["Z"], self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce,self.Rot["X"],self.Rot["Y"],self.Rot["Z"],
+        SectionList = [self.Accel["X"], self.Accel["Y"], self.Accel["Z"], self.Gyro["X"], self.Gyro["Y"], self.Gyro["Z"], self.Millis,self.GForce,self.Rot["X"],self.Rot["Y"],self.Rot["Z"],self.DDMillis.Gyro,self.DDMillis.Accel,self.DDMillis.Rot,self.DDMillis.Mag,
                        self.GPSDat["lng"], self.GPSDat["lat"], self.GPSDat["Speed"], self.GPSDat["Altitude"], self.GPSDat["Accuracy"], self.GPSDat["Bearing"],self.Mag["X"],self.Mag["Y"],self.Mag["Z"]]
 
         for item in SectionList:
             if not len(item) == 0:
-                for SubItem in range(len(item)):
+                GoToThisDangit = item[:]
+                for SubItem in range(len(GoToThisDangit)):
                     try:
                         if SubItem > len(item):
                             break
@@ -201,25 +183,84 @@ class DataClass(object):
                             "Slightly dangerous catch...."
                     except IndexError:
                         "yo"
-
+    def getShortestDat(self):
+        AL = len(self.DDMillis.Accel)
+        GL = len(self.DDMillis.Gyro)
+        ML = len(self.DDMillis.Mag)
+        RL = len(self.DDMillis.Rot)
+        if AL<=GL and AL<=ML and AL<=RL:
+            return "acc"
+        elif GL<=AL and GL<=ML and AL<=RL:
+            return "gyr"
+        elif ML<=AL and ML<=GL and ML<=RL:
+            return "mag"
+        elif RL<=AL and RL<=GL and RL<=ML:
+            return "rot"
+        else:
+            return "FAIL!!"
 class GenericDat(object):
     def __init__(self):
         self.Dat = {"X":[],"Y":[],"Z":[]}
     def __init__(self,X,Y,Z):
         self.Dat = {"X":X,"Y":Y,"Z":Z}
+    def __init__(self,X,Y,Z,Millis):
+        self.Dat = {"X":X,"Y":Y,"Z":Z}
+        self.Millis = Millis
     def set_X(self,list):
         self.Dat["X"] = list
     def set_Y(self,list):
         self.Dat["Y"] = list
     def set_Z(self,list):
         self.Dat["Z"] = list
+    def set_Millis(self,list):
+        self.Millis = list
     def get_X(self):
         return self.Dat["X"]
     def get_Y(self):
         return self.Dat["Y"]
     def get_Z(self):
         return self.Dat["Z"]
+    def get_Millis(self):
+        return self.Millis
     def set(self,Key,list):
         self.Dat[Key] = list
     def get(self,Key):
         return self.Dat[Key]
+    def SyncTo(self,itemMillis,targetedMillis,item):
+        raise NotImplementedError()
+        if not len(itemMillis) == len(item):
+            raise ValueError("Item and ItemMillis must have same length")
+        newSet = {}
+        on = 0
+        #if round(itemMillis[-1]) == round(targetedMillis[-1]):
+        #    raise ValueError("itemMillis and targetedMillis do no end at similar places.")
+        if round(itemMillis[-1],ndigits=1) is round(targetedMillis[-1],ndigits=1):
+            precis = 2
+        else:
+            precis = 1
+        for time in targetedMillis:
+            newSet[str(time)] = []
+            GoOn = True
+            while GoOn:
+                if round(float(itemMillis[on]),ndigits=precis)==round(float(time),ndigits=precis):
+                    newSet[str(time)].append(item[on])
+                    on = on+1
+                else:
+                    GoOn=False
+            if newSet[str(time)]==[]:
+                try:
+                    newSet[str(time)]=[newSet[str(targetedMillis[targetedMillis.index(time)-1])][0]]
+                except IndexError:
+                    newSet[str(time)]=[0.0]
+        print newSet
+    def syncDatTo(self,targetedMillis):
+        raise NotImplementedError()
+        for Axis in self.Dat:
+            self.Dat[Axis]=self.SyncTo(self.Millis,targetedMillis,self.Dat[Axis])
+
+class DifDatMillis(object):
+    def __init__(self):
+        self.Accel = []
+        self.Gyro = []
+        self.Rot = []
+        self.Mag = []
