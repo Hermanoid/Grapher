@@ -117,7 +117,7 @@ class DataClass(object):
         cutOff = List[0]
         
         for item in range(len(List)):
-            List[item] = List[item] - cutOff
+            List[item] = float(List[item]) - float(cutOff)
         return List
     def getGenericDataFor(self,datName):
         if datName in ['acc.csv','acc','Acc','ACC','Accel','ACCEL','Accelerometer']:
@@ -153,10 +153,10 @@ class DataClass(object):
         self.AccelAvg = []
 
         for item in range(len(self.Accel["X"])):
-            for axis in ["X","Y","Z"]:
-                if type(self.Accel[axis][item]) != type(123.345):
-                    raise ValueError("non-number included in Accel bank.  Use formatAllToFloat() to remove strings.")
-            self.AccelAvg.append((self.Accel["X"][item] + self.Accel["Y"][item] + self.Accel["Z"][item]) / 3)
+            #for axis in ["X","Y","Z"]:
+            #    if type(self.Accel[axis][item]) != type(123.345):
+            #        raise ValueError("non-number included in Accel bank.  Use formatAllToFloat() to remove strings.")
+            self.AccelAvg.append((float(self.Accel["X"][item]) + float(self.Accel["Y"][item]) + float(self.Accel["Z"][item])) / 3)
     def formatAllToFloat(self):
         """deletes strings from every sub catagory in the entire bank of data held in the DataClass instance
         
@@ -264,3 +264,49 @@ class DifDatMillis(object):
         self.Gyro = []
         self.Rot = []
         self.Mag = []
+
+class Template(object):
+    class FileSetup:
+        #def __init__(self):
+        #    self.RowNames = []
+        #    self.Dats = []
+        #    self.DatRows = {}
+        #    self.SubDats = {}
+        #    self.RowCount = 0
+        def __init__(self,RowNames = [],Dats = [],DatRows = {},RowCount = 0,SubDats = {}):
+            self.DatRows = DatRows
+            self.Dats = Dats
+            self.RowNames = RowNames
+            self.RowCount = RowCount
+            self.SubDats = SubDats
+        def toInitString(self):
+            NS = "DataClass.Template.FileSetup("
+            NS = NS+str(self.RowNames)+','
+            NS = NS+str(self.Dats)+','
+            NS = NS+str(self.DatRows)+','
+            NS = NS+str(self.RowCount)+','
+            NS = NS+str(self.SubDats)+")"
+            return NS
+    def __init__(self,templateName = "",isMultiFile = False,Files = {},MultiFileDivider = '',totalFiles = 0):
+        self.templateName = templateName
+        self.isMultiFile = isMultiFile
+        self.Files = Files
+        self.MultiFileDivider =MultiFileDivider
+        self.totalFiles = totalFiles
+    def ToInitString(self):
+        NS = ""
+        NS = NS+"DataClass.Template("
+        NS = NS+"'"+self.templateName+"',"
+        NS = NS+str(self.isMultiFile)+",{"
+        for key in self.Files:
+            NS = NS+"'"+key+"':"+self.Files[key].toInitString()+','
+        NS = NS[:-1]
+        NS = NS+"},"
+        if self.MultiFileDivider == '':
+            MFD = "''"
+        else:
+            MFD = self.MultiFileDivider
+        NS = NS+MFD+","
+        NS = NS+str(self.totalFiles)+")"
+        return NS
+        

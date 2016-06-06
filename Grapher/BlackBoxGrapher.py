@@ -22,3 +22,5 @@ print ""
 
 Grapher = GraphingUtil.GraphingUtil()
 Grapher.Graphit(GraphDatas,ProcessData)
+
+print "Done!"

@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>f401f1cd-3c72-45a9-bfbc-64f448738100</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SensorKeneticsGrapher.py</StartupFile>
+    <StartupFile>BlackBoxGrapher.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -26,6 +26,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BlackBoxGrapher.py" />
+    <Compile Include="fluidGrapher.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GraphingUtil.py">
       <SubType>Code</SubType>
     </Compile>
